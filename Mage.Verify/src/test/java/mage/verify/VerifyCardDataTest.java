@@ -16,10 +16,7 @@ import mage.abilities.keyword.*;
 import mage.cards.*;
 import mage.cards.decks.DeckCardLists;
 import mage.cards.decks.importer.DeckImporter;
-import mage.cards.repository.CardCriteria;
-import mage.cards.repository.CardInfo;
-import mage.cards.repository.CardRepository;
-import mage.cards.repository.CardScanner;
+import mage.cards.repository.*;
 import mage.constants.CardType;
 import mage.constants.Rarity;
 import mage.constants.SubType;
@@ -42,8 +39,6 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mage.plugins.card.dl.sources.ScryfallImageSupportCards;
-import org.mage.plugins.card.images.CardDownloadData;
-import org.mage.plugins.card.images.DownloadPicturesService;
 import org.reflections.Reflections;
 
 import java.io.IOException;
@@ -63,8 +58,8 @@ public class VerifyCardDataTest {
 
     private static final Logger logger = Logger.getLogger(VerifyCardDataTest.class);
 
+    private static final String FULL_ABILITIES_CHECK_SET_CODE = "ONE"; // check all abilities and output cards with wrong abilities texts;
     private static final boolean CHECK_ONLY_ABILITIES_TEXT = false; // use when checking text locally, suppresses unnecessary checks and output messages
-    private static final String FULL_ABILITIES_CHECK_SET_CODE = "MOC"; // check all abilities and output cards with wrong abilities texts;
 
     private static final boolean AUTO_FIX_SAMPLE_DECKS = false; // debug only: auto-fix sample decks by test_checkSampleDecks test run
 
@@ -874,6 +869,7 @@ public class VerifyCardDataTest {
             String needClassName = Arrays.stream(
                     set.getName()
                             .replaceAll("&", "And")
+                            .replace("-", " ")
                             .replaceAll("[.+-/:\"']", "")
                             .split(" ")
             ).map(CardUtil::getTextWithFirstCharUpperCase).reduce("", String::concat);
@@ -1227,30 +1223,30 @@ public class VerifyCardDataTest {
 
 
         // tok file's data
-        List<CardDownloadData> tokFileTokens = DownloadPicturesService.getTokenCardUrls();
+        List<TokenInfo> tokFileTokens = TokenRepository.instance.getAll();
         LinkedHashMap<String, String> tokDataClassesIndex = new LinkedHashMap<>();
         LinkedHashMap<String, String> tokDataNamesIndex = new LinkedHashMap<>();
-        LinkedHashMap<String, List<CardDownloadData>> tokDataTokensBySetIndex = new LinkedHashMap<>();
-        for (CardDownloadData tokData : tokFileTokens) {
+        LinkedHashMap<String, List<TokenInfo>> tokDataTokensBySetIndex = new LinkedHashMap<>();
+        for (TokenInfo tokData : tokFileTokens) {
 
             String searchName;
             String setsList;
 
             // by set
-            List<CardDownloadData> tokensInSet = tokDataTokensBySetIndex.getOrDefault(tokData.getSet(), null);
+            List<TokenInfo> tokensInSet = tokDataTokensBySetIndex.getOrDefault(tokData.getSetCode(), null);
             if (tokensInSet == null) {
                 tokensInSet = new ArrayList<>();
-                tokDataTokensBySetIndex.put(tokData.getSet(), tokensInSet);
+                tokDataTokensBySetIndex.put(tokData.getSetCode(), tokensInSet);
             }
             tokensInSet.add(tokData);
 
             // by class
-            searchName = tokData.getAffectedClassName();
+            searchName = tokData.getFullClassFileName();
             setsList = tokDataClassesIndex.getOrDefault(searchName, "");
             if (!setsList.isEmpty()) {
                 setsList += ",";
             }
-            setsList += tokData.getSet();
+            setsList += tokData.getSetCode();
             tokDataClassesIndex.put(searchName, setsList);
 
             // by name
@@ -1259,7 +1255,7 @@ public class VerifyCardDataTest {
             if (!setsList.isEmpty()) {
                 setsList += ",";
             }
-            setsList += tokData.getSet();
+            setsList += tokData.getSetCode();
             tokDataNamesIndex.put(searchName, setsList);
         }
 
@@ -1302,7 +1298,7 @@ public class VerifyCardDataTest {
         tokDataTokensBySetIndex.forEach((setCode, setTokens) -> {
             if (!allSetCodes.contains(setCode)) {
                 errorsList.add("error, card-pictures-tok.txt contains unknown set code: "
-                        + setCode + " - " + setTokens.stream().map(CardDownloadData::getName).collect(Collectors.joining(", ")));
+                        + setCode + " - " + setTokens.stream().map(TokenInfo::getName).collect(Collectors.joining(", ")));
             }
         });
 
@@ -1323,7 +1319,7 @@ public class VerifyCardDataTest {
         }
         // set uses tokens, but tok data miss it
         setsWithTokens.forEach((setCode, sourceCards) -> {
-            List<CardDownloadData> setTokens = tokDataTokensBySetIndex.getOrDefault(setCode, null);
+            List<TokenInfo> setTokens = tokDataTokensBySetIndex.getOrDefault(setCode, null);
             if (setTokens == null) {
                 // it's not a problem -- just find set's cards without real tokens for image tests
                 // Possible reasons:
@@ -1350,7 +1346,7 @@ public class VerifyCardDataTest {
                             .map(card -> card.getName() + " - " + String.join(", ", card.getRules()))
                             .noneMatch(s -> s.contains(needTokenName))) {
                         warningsList.add("info, tok-data has un-used tokens: "
-                                + token.getSet() + " - " + token.getName());
+                                + token.getSetCode() + " - " + token.getName());
                     }
                 });
             }
@@ -1362,7 +1358,16 @@ public class VerifyCardDataTest {
                 // - outdated set code in tokens database (must be fixed by new set code, another verify check it)
                 // - promo set contains additional tokens for main set (it's ok and must be ignored, example: Saproling in E02)
                 warningsList.add("warning, tok-data has tokens, but real set haven't cards with it: "
-                        + setCode + " - " + setTokens.stream().map(CardDownloadData::getName).collect(Collectors.joining(", ")));
+                        + setCode + " - " + setTokens.stream().map(TokenInfo::getName).collect(Collectors.joining(", ")));
+            }
+        });
+
+        // CHECK: token and class names must be same in all sets
+        TokenRepository.instance.getAllByClassName().forEach((className, list) -> {
+            Set<String> names = list.stream().map(TokenInfo::getName).collect(Collectors.toSet());
+            if (names.size() > 1) {
+                errorsList.add("error, card-pictures-tok.txt contains different names for same class: "
+                        + className + " - " + String.join(", ", names));
             }
         });
 

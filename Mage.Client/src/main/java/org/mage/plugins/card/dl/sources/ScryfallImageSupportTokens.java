@@ -1422,7 +1422,7 @@ public class ScryfallImageSupportTokens {
 
             // CNS
             put("CNS/Construct", "https://api.scryfall.com/cards/tcns/8/en?format=image");
-            put("CNS/Emblem Dack Fayden", "https://api.scryfall.com/cards/tcns/9/en?format=image");
+            put("CNS/Emblem Dack", "https://api.scryfall.com/cards/tcns/9/en?format=image");
             put("CNS/Demon", "https://api.scryfall.com/cards/tcns/2/en?format=image");
             put("CNS/Elephant", "https://api.scryfall.com/cards/tcns/5/en?format=image");
             put("CNS/Spirit", "https://api.scryfall.com/cards/tcns/1/en?format=image");
@@ -1521,7 +1521,7 @@ public class ScryfallImageSupportTokens {
 
             // EMA
             put("EMA/Carnivore", "https://api.scryfall.com/cards/tema/7/en?format=image");
-            put("EMA/Emblem Dack Fayden", "https://api.scryfall.com/cards/tema/16/en?format=image");
+            put("EMA/Emblem Dack", "https://api.scryfall.com/cards/tema/16/en?format=image");
             put("EMA/Dragon", "https://api.scryfall.com/cards/tema/8/en?format=image");
             put("EMA/Elemental/1", "https://api.scryfall.com/cards/tema/9/en?format=image");
             put("EMA/Elemental/2", "https://api.scryfall.com/cards/tema/14/en?format=image");
@@ -1985,6 +1985,14 @@ public class ScryfallImageSupportTokens {
             put("MOC/Vampire Knight", "https://api.scryfall.com/cards/tmoc/20/en?format=image");
             put("MOC/Warrior", "https://api.scryfall.com/cards/tmoc/10/en?format=image");
             put("MOC/Zombie Knight", "https://api.scryfall.com/cards/tmoc/21/en?format=image");
+
+            // ODY
+            put("ODY/Bear", "https://api.scryfall.com/cards/mpr/7/en?format=image");
+            put("ODY/Beast", "https://api.scryfall.com/cards/mpr/8/en?format=image");
+            put("ODY/Elephant", "https://api.scryfall.com/cards/pr2/5/en?format=image");
+            put("ODY/Squirrel", "https://api.scryfall.com/cards/pr2/3/en?format=image");
+            put("ODY/Wurm", "https://api.scryfall.com/cards/pr2/6/en?format=image");
+            put("ODY/Zombie", "https://api.scryfall.com/cards/pr2/4/en?format=image");
 
             // generate supported sets
             supportedSets.clear();

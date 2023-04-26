@@ -3965,9 +3965,7 @@ public class TestPlayer implements Player {
     }
 
     @Override
-    public boolean choose(Outcome outcome, Cards cards,
-                          TargetCard target, Game game
-    ) {
+    public boolean choose(Outcome outcome, Cards cards, TargetCard target, Ability source, Game game) {
         assertAliasSupportInChoices(false);
         if (!choices.isEmpty()) {
 
@@ -3995,7 +3993,7 @@ public class TestPlayer implements Player {
                             continue;
                         }
                         if (hasObjectTargetNameOrAlias(card, targetName)) {
-                            if (target.isNotTarget() || target.canTarget(card.getId(), game)) {
+                            if (target.isNotTarget() || target.canTarget(card.getId(), source, game)) {
                                 target.add(card.getId(), game);
                                 targetFound = true;
                                 break;
@@ -4013,7 +4011,7 @@ public class TestPlayer implements Player {
         }
 
         this.chooseStrictModeFailed("choice", game, getInfo(target));
-        return computerPlayer.choose(outcome, cards, target, game);
+        return computerPlayer.choose(outcome, cards, target, source, game);
     }
 
     @Override
@@ -4382,6 +4380,40 @@ public class TestPlayer implements Player {
             }
 
             assertWrongChoiceUsage(choice);
+        }
+
+        String allInfo = useable.values().stream().map(Object::toString).collect(Collectors.joining("\n"));
+        this.chooseStrictModeFailed("choice", game, getInfo(card) + " - can't select ability to cast.\n" + "Card's abilities:\n" + allInfo);
+        return computerPlayer.chooseAbilityForCast(card, game, noMana);
+    }
+
+    @Override
+    public ActivatedAbility chooseLandOrSpellAbility(Card card, Game game, boolean noMana) {
+        assertAliasSupportInChoices(false);
+        MageObject object = game.getObject(card.getId()); // must be object to find real abilities (example: commander)
+        Map<UUID, ActivatedAbility> useable = new LinkedHashMap<>(PlayerImpl.getCastableSpellAbilities(game, this.getId(), object, game.getState().getZone(object.getId()), noMana));
+        if (canPlayLand()) {
+            for (Ability ability : card.getAbilities(game)) {
+                if (ability instanceof PlayLandAbility) {
+                    useable.put(ability.getId(), (PlayLandAbility) ability);
+                }
+            }
+        }
+        if (useable.size() == 1) {
+            return useable.values().iterator().next();
+        }
+
+        if (!choices.isEmpty()) {
+            for (ActivatedAbility ability : useable.values()) {
+                if (ability.toString().startsWith(choices.get(0))) {
+                    choices.remove(0);
+                    return ability;
+                }
+            }
+
+            // TODO: enable fail checks and fix tests
+            //Assert.fail("Wrong choice");
+            LOGGER.warn("Wrong choice");
         }
 
         String allInfo = useable.values().stream().map(Object::toString).collect(Collectors.joining("\n"));

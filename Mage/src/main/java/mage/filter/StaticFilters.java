@@ -608,6 +608,13 @@ public final class StaticFilters {
         FILTER_CONTROLLED_ANOTHER_CREATURE.setLockedFilter(true);
     }
 
+    public static final FilterControlledCreaturePermanent FILTER_CONTROLLED_UNTAPPED_CREATURE = new FilterControlledCreaturePermanent("untapped creature you control");
+
+    static {
+        FILTER_CONTROLLED_UNTAPPED_CREATURE.add(TappedPredicate.UNTAPPED);
+        FILTER_CONTROLLED_UNTAPPED_CREATURE.setLockedFilter(true);
+    }
+
     public static final FilterControlledCreaturePermanent FILTER_CONTROLLED_UNTAPPED_CREATURES = new FilterControlledCreaturePermanent("untapped creatures you control");
 
     static {
@@ -806,15 +813,6 @@ public final class StaticFilters {
     static {
         FILTER_SPELL_OR_ABILITY_OPPONENTS.add(TargetController.OPPONENT.getControllerPredicate());
         FILTER_SPELL_OR_ABILITY_OPPONENTS.setLockedFilter(true);
-    }
-
-    public static final FilterStackObject FILTER_SPELL_OR_ABILITY_OPPONENTS_NON_GREEN = new FilterStackObject("a nongreen spell or ability an opponent controls");
-
-    static {
-        FILTER_SPELL_OR_ABILITY_OPPONENTS_NON_GREEN.add(Predicates.not(new ColorPredicate(ObjectColor.GREEN)));
-        FILTER_SPELL_OR_ABILITY_OPPONENTS_NON_GREEN.add(TargetController.OPPONENT.getControllerPredicate());
-        FILTER_SPELL_OR_ABILITY_OPPONENTS_NON_GREEN.setLockedFilter(true);
-
     }
 
     public static final FilterStackObject FILTER_SPELL_OR_ABILITY = new FilterStackObject();
